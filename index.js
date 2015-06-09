@@ -1,4 +1,4 @@
-module.exports = function(grunt) {
+module.exports = require('gruntfile')(function(grunt) {
   'use strict';
 
   var path = require('path');
@@ -30,20 +30,28 @@ module.exports = function(grunt) {
       options: {
         jshintrc: true,
       }
+    },
+    mocha_istanbul: {
+      coverage: {
+        src: 'test'
+      }
     }
   });
 
   var plugins = ['grunt-contrib-jshint',
     'grunt-depcheck',
     'grunt-jscs',
+    'grunt-mocha-istanbul',
   ];
 
   plugins.forEach(function(pluginName) {
-    grunt.loadTasks(path.join(__dirname, 'node_modules', pluginName, 'tasks'));
+    grunt.loadNpmTasks(pluginName);
   });
 
   grunt.registerTask('pre-test', ['depcheck',
     'jscs',
     'jshint',
   ]);
-};
+
+  grunt.registerTask('test', ['mocha_istanbul:coverage']);
+});
