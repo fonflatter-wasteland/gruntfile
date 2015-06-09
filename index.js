@@ -9,15 +9,6 @@ module.exports = require('gruntfile')(function(grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    depcheck: {
-      options: {
-        withoutDev: false,
-        ignoreMatches: ['grunt*']
-      },
-      files: {
-        src: ['.']
-      }
-    },
     jscs: {
       files: filesToCheck,
       options: {
@@ -39,7 +30,6 @@ module.exports = require('gruntfile')(function(grunt) {
   });
 
   var plugins = ['grunt-contrib-jshint',
-    'grunt-depcheck',
     'grunt-jscs',
     'grunt-mocha-istanbul',
   ];
@@ -48,10 +38,35 @@ module.exports = require('gruntfile')(function(grunt) {
     grunt.loadNpmTasks(pluginName);
   });
 
-  grunt.registerTask('pre-test', ['depcheck',
+  grunt.registerTask('pre-test', ['npm-check',
     'jscs',
     'jshint',
   ]);
 
   grunt.registerTask('test', ['mocha_istanbul:coverage']);
+
+  grunt.registerTask('npm-check', 'Checks package dependencies.', function() {
+    var npmCheck = require('npm-check');
+    var output = require('npm-check/lib/output');
+    var options = {};
+
+    var done = this.async();
+
+    return npmCheck(options)
+      .catch(function(err){
+        grunt.log.writeln('[npm-check]', err.stack || err);
+        process.exit(1);
+      })
+      .then(function(modules) {
+        return output(modules, options);
+      })
+      .catch(function(err){
+        grunt.log.writeln('[npm-check]', err.stack || err);
+        process.exit(1);
+      })
+      .then(function () {
+        return done(true);
+      })
+      .done();
+  });
 });
